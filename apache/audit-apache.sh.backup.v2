@@ -26,8 +26,7 @@
 set -uo pipefail
 
 # ── Version ──
-VERSION="2.1.0"
-FRAMEWORK_VERSION="2.0.0"
+VERSION="1.0.0"
 SCRIPT_NAME="NawaSec Audit - Apache"
 
 # ── Colors ──
@@ -194,17 +193,12 @@ audit_detection() {
             "Apache HTTP Server is not installed or not in PATH" \
             "Cannot perform audit without Apache" \
             "Install Apache: apt install apache2 or yum install httpd" \
-            "" \
             "" ""
         return 1
     fi
-        add_result "detection" "Apache Binary" "PASS" "INFO" \
-            "Found: $APACHE_BIN" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+    add_result "detection" "Apache Binary" "PASS" "INFO" \
+        "Found: $APACHE_BIN" \
+        "" "" "" "" ""
 
     # Check if config exists
     if [[ -z "$APACHE_CONF" ]]; then
@@ -213,46 +207,32 @@ audit_detection() {
             "Apache configuration file not found" \
             "Cannot audit configuration" \
             "Check Apache installation" \
-            "" \
             "" ""
         return 1
     fi
-        add_result "detection" "Config File" "PASS" "INFO" \
-            "$APACHE_CONF" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+    add_result "detection" "Config File" "PASS" "INFO" \
+        "$APACHE_CONF" \
+        "" "" "" "" ""
 
     # Check version
     local version=$($APACHE_BIN -v 2>/dev/null | grep "Server version" | awk -F'/' '{print $2}' | awk '{print $1}')
     if [[ -n "$version" ]]; then
         add_result "detection" "Version" "INFO" "INFO" \
             "$version" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 
     # Check if running
     if systemctl is-active --quiet httpd 2>/dev/null || systemctl is-active --quiet apache2 2>/dev/null; then
         add_result "detection" "Service Status" "PASS" "INFO" \
             "Running" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "detection" "Service Status" "WARN" "MEDIUM" \
             "Not running" \
             "Apache service is not active" \
             "Web server is not serving requests" \
             "Start Apache: systemctl start httpd/apache2" \
-            "" \
             "" ""
     fi
 
@@ -270,25 +250,21 @@ audit_headers() {
             "$tokens — Minimal info exposed" \
             "ServerTokens controls how much server info is revealed" \
             "Exposing version helps attackers find known vulnerabilities" \
-            "" \
-            "" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#servertokens" ""
+            "" "" "https://httpd.apache.org/docs/2.4/mod/core.html#servertokens"
     elif [[ -z "$tokens" ]]; then
         add_result "headers" "ServerTokens" "FAIL" "MEDIUM" \
             "Not set — defaults to Full" \
             "ServerTokens defaults to 'Full' which exposes Apache version, OS, and modules" \
             "Attackers can target specific known vulnerabilities" \
             "Add 'ServerTokens Prod' to $APACHE_CONF" \
-            "ServerTokens Prod" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#servertokens" ""
+            "ServerTokens Prod" "https://httpd.apache.org/docs/2.4/mod/core.html#servertokens"
     else
         add_result "headers" "ServerTokens" "WARN" "MEDIUM" \
             "$tokens — Consider using 'Prod'" \
             "Current setting exposes more info than necessary" \
             "Information disclosure aids reconnaissance" \
             "Set 'ServerTokens Prod'" \
-            "ServerTokens Prod" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#servertokens" ""
+            "ServerTokens Prod" "https://httpd.apache.org/docs/2.4/mod/core.html#servertokens"
     fi
 
     # ServerSignature
@@ -296,27 +272,21 @@ audit_headers() {
     if [[ "$sig" == "Off" ]]; then
         add_result "headers" "ServerSignature" "PASS" "LOW" \
             "Off — No signature in error pages" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     elif [[ -z "$sig" ]]; then
         add_result "headers" "ServerSignature" "WARN" "LOW" \
             "Not set — defaults to On" \
             "ServerSignature adds server info to error pages and directory listings" \
             "Information disclosure" \
             "Add 'ServerSignature Off'" \
-            "ServerSignature Off" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#serversignature" ""
+            "ServerSignature Off" "https://httpd.apache.org/docs/2.4/mod/core.html#serversignature"
     else
         add_result "headers" "ServerSignature" "WARN" "LOW" \
             "$sig" \
             "ServerSignature should be Off in production" \
             "Information disclosure" \
             "Set 'ServerSignature Off'" \
-            "ServerSignature Off" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#serversignature" ""
+            "ServerSignature Off" "https://httpd.apache.org/docs/2.4/mod/core.html#serversignature"
     fi
 
     # X-Frame-Options
@@ -324,19 +294,14 @@ audit_headers() {
     if [[ -n "$xframe" ]]; then
         add_result "headers" "X-Frame-Options" "PASS" "MEDIUM" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "X-Frame-Options" "FAIL" "MEDIUM" \
             "Not configured" \
             "Without X-Frame-Options, site can be embedded in iframes (Clickjacking)" \
             "Users can be tricked into clicking hidden elements" \
             "Add 'Header always set X-Frame-Options DENY'" \
-            "DENY" \
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options" ""
+            'Header always set X-Frame-Options "DENY"' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options"
     fi
 
     # X-Content-Type-Options
@@ -344,19 +309,14 @@ audit_headers() {
     if [[ -n "$xcto" ]]; then
         add_result "headers" "X-Content-Type-Options" "PASS" "MEDIUM" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "X-Content-Type-Options" "FAIL" "MEDIUM" \
             "Not configured" \
             "Without this header, browsers may MIME-sniff responses" \
             "Can lead to XSS attacks via content type confusion" \
             "Add 'Header always set X-Content-Type-Options nosniff'" \
-            "nosniff" \
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options" ""
+            'Header always set X-Content-Type-Options "nosniff"' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options"
     fi
 
     # X-XSS-Protection
@@ -364,19 +324,14 @@ audit_headers() {
     if [[ -n "$xxss" ]]; then
         add_result "headers" "X-XSS-Protection" "PASS" "LOW" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "X-XSS-Protection" "WARN" "LOW" \
             "Not configured" \
             "Legacy XSS filter header not set" \
             "Older browsers may not enable XSS protection" \
             "Add 'Header always set X-XSS-Protection 1; mode=block'" \
-            "1; mode=block" \
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection" ""
+            'Header always set X-XSS-Protection "1; mode=block"' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection"
     fi
 
     # Content-Security-Policy
@@ -384,11 +339,7 @@ audit_headers() {
     if [[ -n "$csp" ]]; then
         add_result "headers" "Content-Security-Policy" "PASS" "HIGH" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "Content-Security-Policy" "FAIL" "HIGH" \
             "Not configured" \
@@ -403,19 +354,14 @@ audit_headers() {
     if [[ -n "$hsts" ]]; then
         add_result "headers" "Strict-Transport-Security" "PASS" "HIGH" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "Strict-Transport-Security" "FAIL" "HIGH" \
             "Not configured" \
             "HSTS forces browsers to use HTTPS, preventing SSL stripping attacks" \
             "Man-in-the-middle attacks possible on HTTP" \
             "Add HSTS header (only if HTTPS is configured)" \
-            "max-age=31536000; includeSubDomains" \
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security" ""
+            'Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security"
     fi
 
     # Referrer-Policy
@@ -423,19 +369,14 @@ audit_headers() {
     if [[ -n "$refpol" ]]; then
         add_result "headers" "Referrer-Policy" "PASS" "MEDIUM" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "Referrer-Policy" "WARN" "MEDIUM" \
             "Not configured" \
             "Referrer-Policy controls how much referrer info is sent" \
             "May leak sensitive URL paths to external sites" \
             "Add 'Header always set Referrer-Policy strict-origin-when-cross-origin'" \
-            "strict-origin-when-cross-origin" \
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy" ""
+            'Header always set Referrer-Policy "strict-origin-when-cross-origin"' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy"
     fi
 
     # Permissions-Policy
@@ -443,19 +384,14 @@ audit_headers() {
     if [[ -n "$permpol" ]]; then
         add_result "headers" "Permissions-Policy" "PASS" "MEDIUM" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "headers" "Permissions-Policy" "WARN" "MEDIUM" \
             "Not configured" \
             "Permissions-Policy restricts browser features (camera, mic, geolocation)" \
             "Third-party scripts may access sensitive features" \
             "Add Permissions-Policy header" \
-            "camera=(), microphone=(), geolocation=()" \
-            "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy" ""
+            'Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"' "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy"
     fi
 }
 
@@ -468,30 +404,21 @@ audit_directories() {
     if [[ -n "$docroot" ]] && [[ -d "$docroot" ]]; then
         local perms=$(stat -c "%a" "$docroot" 2>/dev/null)
         if [[ "$perms" -le 755 ]]; then
-        add_result "directories" "DocumentRoot Perms" "PASS" "MEDIUM" \
-            "$docroot ($perms)" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "directories" "DocumentRoot Perms" "PASS" "MEDIUM" \
+                "$docroot ($perms)" \
+                "" "" "" "" ""
         else
-        add_result "directories" "DocumentRoot Perms" "WARN" "MEDIUM" \
-            "$docroot ($perms) — too permissive" \
-            "DocumentRoot should not be world-writable" \
-            "Attackers could modify website files" \
-            "chmod 755 $docroot" \
-            "chmod 755 $docroot" \
-            "" ""
+            add_result "directories" "DocumentRoot Perms" "WARN" "MEDIUM" \
+                "$docroot ($perms) — too permissive" \
+                "DocumentRoot should not be world-writable" \
+                "Attackers could modify website files" \
+                "chmod 755 $docroot" \
+                "chmod 755 $docroot" ""
         fi
     else
         add_result "directories" "DocumentRoot" "SKIP" "INFO" \
             "Not found or not accessible" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 
     # Directory listing
@@ -502,16 +429,11 @@ audit_directories() {
             "Directory listing shows all files in a directory without index.html" \
             "Attackers can discover sensitive files (backups, configs, scripts)" \
             "Remove 'Indexes' from Options directive" \
-            "Options -Indexes" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#options" ""
+            "Options -Indexes" "https://httpd.apache.org/docs/2.4/mod/core.html#options"
     else
         add_result "directories" "Directory Listing" "PASS" "HIGH" \
             "Disabled" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 
     # .htaccess override
@@ -522,16 +444,11 @@ audit_directories() {
             "AllowOverride All lets .htfiles override any Apache directive" \
             "Compromised .htaccess could change security settings" \
             "Use 'AllowOverride None' or limit to specific directives" \
-            "AllowOverride FileInfo AuthConfig" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride" ""
+            "AllowOverride FileInfo AuthConfig" "https://httpd.apache.org/docs/2.4/mod/core.html#allowoverride"
     else
         add_result "directories" "AllowOverride" "PASS" "MEDIUM" \
             "Restricted" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 
     # FollowSymLinks
@@ -542,16 +459,11 @@ audit_directories() {
             "FollowSymLinks allows Apache to follow symbolic links" \
             "Symlink attacks could expose files outside DocumentRoot" \
             "Replace with 'Options SymLinksIfOwnerMatch'" \
-            "Options -FollowSymLinks +SymLinksIfOwnerMatch" \
-            "https://httpd.apache.org/docs/2.4/mod/core.html#options" ""
+            "Options -FollowSymLinks +SymLinksIfOwnerMatch" "https://httpd.apache.org/docs/2.4/mod/core.html#options"
     else
         add_result "directories" "FollowSymLinks" "PASS" "MEDIUM" \
             "Disabled or restricted" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 }
 
@@ -571,40 +483,36 @@ audit_modules() {
         if echo "$modules" | grep -qi "${mod}_module"; then
             case "$mod" in
                 status|info)
-        add_result "modules" "Module: $mod" "WARN" "MEDIUM" \
-            "Loaded — exposes server info" \
-            "mod_status/mod_info expose detailed server information" \
-            "Information disclosure aids attackers" \
-            "Disable or restrict access: <Location /server-status> Require ip 127.0.0.1 </Location>" \
-            "LoadModule ${mod}_module modules/mod_${mod}.so" \
-            "" ""
+                    add_result "modules" "Module: $mod" "WARN" "MEDIUM" \
+                        "Loaded — exposes server info" \
+                        "mod_status/mod_info expose detailed server information" \
+                        "Information disclosure aids attackers" \
+                        "Disable or restrict access: <Location /server-status> Require ip 127.0.0.1 </Location>" \
+                        "LoadModule ${mod}_module modules/mod_${mod}.so" ""
                     ;;
                 autoindex)
-        add_result "modules" "Module: $mod" "WARN" "MEDIUM" \
-            "Loaded — directory browsing" \
-            "mod_autoindex enables directory listing" \
-            "Files can be browsed without index.html" \
-            "Disable: a2dismod autoindex" \
-            "" \
-            "" ""
+                    add_result "modules" "Module: $mod" "WARN" "MEDIUM" \
+                        "Loaded — directory browsing" \
+                        "mod_autoindex enables directory listing" \
+                        "Files can be browsed without index.html" \
+                        "Disable: a2dismod autoindex" \
+                        "" ""
                     ;;
                 userdir)
-        add_result "modules" "Module: $mod" "WARN" "MEDIUM" \
-            "Loaded — user directories" \
-            "mod_userdir serves content from ~/public_html" \
-            "May expose user home directories" \
-            "Disable if not needed: a2dismod userdir" \
-            "" \
-            "" ""
+                    add_result "modules" "Module: $mod" "WARN" "MEDIUM" \
+                        "Loaded — user directories" \
+                        "mod_userdir serves content from ~/public_html" \
+                        "May expose user home directories" \
+                        "Disable if not needed: a2dismod userdir" \
+                        "" ""
                     ;;
                 proxy|proxy_http|proxy_ftp|proxy_connect)
-        add_result "modules" "Module: $mod" "WARN" "HIGH" \
-            "Loaded — proxy capability" \
-            "Proxy modules can be abused for SSRF attacks" \
-            "Attackers could use server as proxy to reach internal systems" \
-            "Disable if not needed, or restrict with <Proxy> directives" \
-            "" \
-            "https://httpd.apache.org/docs/2.4/mod/mod_proxy.html" ""
+                    add_result "modules" "Module: $mod" "WARN" "HIGH" \
+                        "Loaded — proxy capability" \
+                        "Proxy modules can be abused for SSRF attacks" \
+                        "Attackers could use server as proxy to reach internal systems" \
+                        "Disable if not needed, or restrict with <Proxy> directives" \
+                        "" "https://httpd.apache.org/docs/2.4/mod/mod_proxy.html"
                     ;;
             esac
         fi
@@ -614,29 +522,20 @@ audit_modules() {
     if echo "$modules" | grep -qi "rewrite_module"; then
         add_result "modules" "Module: rewrite" "PASS" "INFO" \
             "Loaded — URL rewriting" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 
     # mod_ssl
     if echo "$modules" | grep -qi "ssl_module"; then
         add_result "modules" "Module: ssl" "PASS" "INFO" \
             "Loaded — SSL/TLS support" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "modules" "Module: ssl" "WARN" "HIGH" \
             "Not loaded" \
             "mod_ssl is required for HTTPS" \
             "Cannot serve encrypted traffic" \
             "Enable: a2enmod ssl" \
-            "" \
             "" ""
     fi
 
@@ -644,18 +543,13 @@ audit_modules() {
     if echo "$modules" | grep -qi "headers_module"; then
         add_result "modules" "Module: headers" "PASS" "INFO" \
             "Loaded — custom headers" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "modules" "Module: headers" "WARN" "MEDIUM" \
             "Not loaded" \
             "mod_headers is needed for security headers (HSTS, CSP, etc.)" \
             "Cannot set custom security headers" \
             "Enable: a2enmod headers" \
-            "" \
             "" ""
     fi
 }
@@ -668,11 +562,7 @@ audit_ssl() {
     if ! $APACHE_BIN -M 2>/dev/null | grep -qi "ssl_module"; then
         add_result "ssl" "SSL Module" "SKIP" "INFO" \
             "mod_ssl not loaded" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
         return
     fi
 
@@ -681,11 +571,7 @@ audit_ssl() {
     if [[ -z "$ssl_conf" ]]; then
         add_result "ssl" "SSL Configuration" "SKIP" "INFO" \
             "No SSL config found" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
         return
     fi
 
@@ -693,21 +579,16 @@ audit_ssl() {
     local protocol=$(grep -rni "SSLProtocol" /etc/httpd/ /etc/apache2/ 2>/dev/null | head -1 | awk -F'"' '{print $2}')
     if [[ -n "$protocol" ]]; then
         if echo "$protocol" | grep -qi "SSLv2\|SSLv3\|TLSv1\b\|TLSv1.0"; then
-        add_result "ssl" "SSLProtocol" "FAIL" "CRITICAL" \
-            "$protocol — insecure protocols enabled" \
-            "SSLv2/SSLv3/TLSv1.0 have known vulnerabilities (POODLE, BEAST)" \
-            "Attackers can decrypt SSL/TLS traffic" \
-            "Use: SSLProtocol -all +TLSv1.2 +TLSv1.3" \
-            "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslprotocol" \
-            "" ""
+            add_result "ssl" "SSLProtocol" "FAIL" "CRITICAL" \
+                "$protocol — insecure protocols enabled" \
+                "SSLv2/SSLv3/TLSv1.0 have known vulnerabilities (POODLE, BEAST)" \
+                "Attackers can decrypt SSL/TLS traffic" \
+                "Use: SSLProtocol -all +TLSv1.2 +TLSv1.3" \
+                'SSLProtocol -all +TLSv1.2 +TLSv1.3' "https://httpd.apache.org/docs/2.4/mod/mod_ssl.html#sslprotocol"
         else
-        add_result "ssl" "SSLProtocol" "PASS" "HIGH" \
-            "$protocol" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "ssl" "SSLProtocol" "PASS" "HIGH" \
+                "$protocol" \
+                "" "" "" "" ""
         fi
     fi
 
@@ -715,21 +596,16 @@ audit_ssl() {
     local ciphers=$(grep -rni "SSLCipherSuite" /etc/httpd/ /etc/apache2/ 2>/dev/null | head -1 | awk -F'"' '{print $2}')
     if [[ -n "$ciphers" ]]; then
         if echo "$ciphers" | grep -qi "RC4\|DES\|3DES\|MD5\|NULL\|EXPORT"; then
-        add_result "ssl" "SSLCipherSuite" "FAIL" "CRITICAL" \
-            "Weak ciphers detected" \
-            "Weak ciphers can be cracked or have known attacks" \
-            "Encrypted traffic could be decrypted" \
-            "Use modern cipher suite" \
-            "" \
-            "" ""
+            add_result "ssl" "SSLCipherSuite" "FAIL" "CRITICAL" \
+                "Weak ciphers detected" \
+                "Weak ciphers can be cracked or have known attacks" \
+                "Encrypted traffic could be decrypted" \
+                "Use modern cipher suite" \
+                'SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384' ""
         else
-        add_result "ssl" "SSLCipherSuite" "PASS" "HIGH" \
-            "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "ssl" "SSLCipherSuite" "PASS" "HIGH" \
+                "Configured" \
+                "" "" "" "" ""
         fi
     fi
 
@@ -738,19 +614,14 @@ audit_ssl() {
     if [[ "$honor" == "On" ]]; then
         add_result "ssl" "SSLHonorCipherOrder" "PASS" "MEDIUM" \
             "On — server chooses cipher order" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "ssl" "SSLHonorCipherOrder" "WARN" "MEDIUM" \
             "Not set or Off" \
             "Server should control cipher order, not client" \
             "Clients could choose weaker ciphers" \
             "Set 'SSLHonorCipherOrder On'" \
-            "SSLHonorCipherOrder On" \
-            "" ""
+            "SSLHonorCipherOrder On" ""
     fi
 }
 
@@ -766,8 +637,7 @@ audit_access() {
             "Some locations allow unrestricted access" \
             "May expose sensitive directories" \
             "Review and restrict access where needed" \
-            "<Directory /path> Require ip 192.168.1.0/24 </Directory>" \
-            "" ""
+            "<Directory /path> Require ip 192.168.1.0/24 </Directory>" ""
     fi
 
     # Check for .htaccess files
@@ -776,10 +646,7 @@ audit_access() {
         add_result "access" ".htaccess Files" "INFO" "INFO" \
             "$htaccess files found" \
             ".htaccess files can override server configuration" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" ""
     fi
 
     # Check for authentication
@@ -787,11 +654,7 @@ audit_access() {
     if [[ "$auth" -gt 0 ]]; then
         add_result "access" "Authentication" "PASS" "INFO" \
             "Authentication configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 }
 
@@ -804,19 +667,14 @@ audit_logging() {
     if [[ -n "$error_log" ]]; then
         add_result "logging" "Error Log" "PASS" "INFO" \
             "$error_log" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "logging" "Error Log" "WARN" "MEDIUM" \
             "Not configured" \
             "Error logging is essential for debugging and security monitoring" \
             "Cannot detect attacks or troubleshoot issues" \
             "Configure ErrorLog directive" \
-            "ErrorLog \${APACHE_LOG_DIR}/error.log" \
-            "" ""
+            "ErrorLog \${APACHE_LOG_DIR}/error.log" ""
     fi
 
     # Custom log
@@ -824,19 +682,14 @@ audit_logging() {
     if [[ -n "$access_log" ]]; then
         add_result "logging" "Access Log" "PASS" "INFO" \
             "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "logging" "Access Log" "WARN" "MEDIUM" \
             "Not configured" \
             "Access logging records all requests for analysis" \
             "Cannot track user activity or detect attacks" \
             "Configure CustomLog directive" \
-            "" \
-            "" ""
+            'CustomLog ${APACHE_LOG_DIR}/access.log combined' ""
     fi
 
     # Log level
@@ -844,27 +697,18 @@ audit_logging() {
     if [[ "$loglevel" == "warn" ]] || [[ "$loglevel" == "info" ]]; then
         add_result "logging" "Log Level" "PASS" "INFO" \
             "$loglevel" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     elif [[ -z "$loglevel" ]]; then
         add_result "logging" "Log Level" "PASS" "INFO" \
             "Default (warn)" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "logging" "Log Level" "WARN" "LOW" \
             "$loglevel — may be too verbose" \
             "Verbose logging can fill disk and impact performance" \
             "" \
             "Use 'LogLevel warn' for production" \
-            "LogLevel warn" \
-            "" ""
+            "LogLevel warn" ""
     fi
 }
 
@@ -877,19 +721,14 @@ audit_performance() {
     if [[ "$keepalive" == "On" ]] || [[ "$keepalive" == "On" ]]; then
         add_result "performance" "KeepAlive" "PASS" "INFO" \
             "On — connection reuse enabled" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     else
         add_result "performance" "KeepAlive" "WARN" "LOW" \
             "Off or not set" \
             "KeepAlive improves performance by reusing connections" \
             "More connections needed, higher latency" \
             "Set 'KeepAlive On'" \
-            "KeepAlive On" \
-            "" ""
+            "KeepAlive On" ""
     fi
 
     # MaxKeepAliveRequests
@@ -897,32 +736,23 @@ audit_performance() {
     if [[ -n "$maxka" ]] && [[ "$maxka" -gt 0 ]]; then
         add_result "performance" "MaxKeepAliveRequests" "PASS" "INFO" \
             "$maxka" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            "" "" "" "" ""
     fi
 
     # Timeout
     local timeout=$(grep -i "^Timeout" "$APACHE_CONF" 2>/dev/null | awk '{print $2}' | tr -d '"')
     if [[ -n "$timeout" ]]; then
         if [[ "$timeout" -gt 300 ]]; then
-        add_result "performance" "Timeout" "WARN" "LOW" \
-            "${timeout}s — may be too long" \
-            "Long timeouts can tie up resources during attacks" \
-            "Slowloris-style DoS attacks" \
-            "Set 'Timeout 60'" \
-            "Timeout 60" \
-            "" ""
+            add_result "performance" "Timeout" "WARN" "LOW" \
+                "${timeout}s — may be too long" \
+                "Long timeouts can tie up resources during attacks" \
+                "Slowloris-style DoS attacks" \
+                "Set 'Timeout 60'" \
+                "Timeout 60" ""
         else
-        add_result "performance" "Timeout" "PASS" "INFO" \
-            "${timeout}s" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "performance" "Timeout" "PASS" "INFO" \
+                "${timeout}s" \
+                "" "" "" "" ""
         fi
     fi
 }

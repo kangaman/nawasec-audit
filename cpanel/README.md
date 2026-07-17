@@ -1,6 +1,6 @@
 # NawaSec Audit — cPanel Module
 
-**Version:** 1.0.0  
+**Version:** 2.1.0  
 **Module:** `nawasec-audit/cpanel`  
 **Repository:** https://github.com/kangaman/nawasec-audit
 

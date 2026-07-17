@@ -15,9 +15,7 @@
 
 set -uo pipefail
 
-VERSION="2.1.0"
-FRAMEWORK_VERSION="2.0.0"
-FRAMEWORK_VERSION="2.0.0"
+VERSION="1.0.0"
 SCRIPT_NAME="NawaSec Audit - cPanel"
 
 setup_colors() {
@@ -73,28 +71,13 @@ add_result() {
             INFO) echo -e "  ${B}ℹ${N} ${name} ${DIM}— ${message}${N}" ;;
             SKIP) echo -e "  ${DIM}○ ${name} — ${message}${N}" ;;
         esac
-        if [[ -n "$explanation" ]] && [[ "$status" =~ ^(WARN|FAIL)$ ]]; then
-            echo -e "    ${DIM}ℹ️  ${explanation}${N}"
-        fi
-        if [[ -n "$risk" ]] && [[ "$status" =~ ^(WARN|FAIL)$ ]]; then
-            echo -e "    ${Y}⚠️  Risk: ${risk}${N}"
-        fi
-        if [[ -n "$recommendation" ]] && [[ "$status" =~ ^(WARN|FAIL)$ ]]; then
-            echo -e "    ${M}🔧 ${recommendation}${N}"
-        fi
-        if [[ -n "$example" ]] && [[ "$status" =~ ^(WARN|FAIL)$ ]]; then
-            echo -e "    ${DIM}   Example: ${example}${N}"
-        fi
+        [[ -n "$explanation" ]] && [[ "$status" =~ ^(WARN|FAIL)$ ]] && echo -e "    ${DIM}ℹ️ ${explanation}${N}"
+        [[ -n "$recommendation" ]] && [[ "$status" =~ ^(WARN|FAIL)$ ]] && echo -e "    ${M}🔧 ${recommendation}${N}"
     fi
-
     local esc_msg=$(echo "$message" | sed 's/"/\\"/g')
     local esc_expl=$(echo "$explanation" | sed 's/"/\\"/g')
-    local esc_risk=$(echo "$risk" | sed 's/"/\\"/g')
-    local esc_impact=$(echo "$impact" | sed 's/"/\\"/g')
     local esc_rec=$(echo "$recommendation" | sed 's/"/\\"/g')
-    local esc_ex=$(echo "$example" | sed 's/"/\\"/g')
-    local esc_ref=$(echo "$reference" | sed 's/"/\\"/g')
-    RESULTS+=("{\"category\":\"${category}\",\"name\":\"${name}\",\"status\":\"${status}\",\"severity\":\"${severity}\",\"message\":\"${esc_msg}\",\"explanation\":\"${esc_expl}\",\"risk\":\"${esc_risk}\",\"impact\":\"${esc_impact}\",\"recommendation\":\"${esc_rec}\",\"example\":\"${esc_ex}\",\"reference\":\"${esc_ref}\"}")
+    RESULTS+=("{\"category\":\"${category}\",\"name\":\"${name}\",\"status\":\"${status}\",\"severity\":\"${severity}\",\"message\":\"${esc_msg}\",\"explanation\":\"${esc_expl}\",\"recommendation\":\"${esc_rec}\"}")
 }
 
 print_section() {
@@ -109,60 +92,24 @@ audit_cpanel_detection() {
     print_section "cPanel Detection" "🔍"
 
     if [[ ! -d /usr/local/cpanel ]]; then
-        add_result "detection" "cPanel" "FAIL" "CRITICAL" \
-            "cPanel not found" \
-            "This system does not have cPanel installed" \
-            "" \
-            "Install cPanel: https://docs.cpanel.net/installation-guide/" \
-            "" \
-            "" ""
+        add_result "detection" "cPanel" "FAIL" "CRITICAL" "cPanel not found" "This system does not have cPanel installed" "" "Install cPanel: https://docs.cpanel.net/installation-guide/" "" ""
         return 1
     fi
-        add_result "detection" "cPanel" "PASS" "INFO" \
-            "Found at /usr/local/cpanel" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+    add_result "detection" "cPanel" "PASS" "INFO" "Found at /usr/local/cpanel" "" "" "" "" ""
 
     local cpanel_version=$(cat /usr/local/cpanel/version 2>/dev/null || echo "unknown")
-        add_result "detection" "cPanel Version" "INFO" "INFO" \
-            "$cpanel_version" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+    add_result "detection" "cPanel Version" "INFO" "INFO" "$cpanel_version" "" "" "" "" ""
 
     if systemctl is-active --quiet cpanel 2>/dev/null || /usr/local/cpanel/cpsrvd status 2>/dev/null | grep -q "running"; then
-        add_result "detection" "cpsrvd" "PASS" "INFO" \
-            "Running" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "detection" "cpsrvd" "PASS" "INFO" "Running" "" "" "" "" ""
     else
-        add_result "detection" "cpsrvd" "WARN" "HIGH" \
-            "Not running" \
-            "cPanel service is not active" \
-            "" \
-            "Start: /usr/local/cpanel/startup" \
-            "" \
-            "" ""
+        add_result "detection" "cpsrvd" "WARN" "HIGH" "Not running" "cPanel service is not active" "" "Start: /usr/local/cpanel/startup" "" ""
     fi
 
     # WHM access
     local whm_port=$(ss -tlnp 2>/dev/null | grep -c ":2087" || echo "0")
     if [[ "$whm_port" -gt 0 ]]; then
-        add_result "detection" "WHM Port" "PASS" "INFO" \
-            "2087 open" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "detection" "WHM Port" "PASS" "INFO" "2087 open" "" "" "" "" ""
     fi
 
     return 0
@@ -173,13 +120,7 @@ audit_whm_security() {
 
     # Check if whm API is accessible
     if [[ -f /var/cpanel/authn/api_tokens/root/cpanel.json ]]; then
-        add_result "whm" "API Tokens" "INFO" "INFO" \
-            "Root API tokens exist" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "whm" "API Tokens" "INFO" "INFO" "Root API tokens exist" "" "" "" "" ""
     fi
 
     # Check Tweak Settings
@@ -188,61 +129,37 @@ audit_whm_security() {
         # Require SSL
         local require_ssl=$(grep "^requiressl=" "$tweak_conf" 2>/dev/null | cut -d= -f2)
         if [[ "$require_ssl" == "1" ]]; then
-        add_result "whm" "Require SSL" "PASS" "HIGH" \
-            "Enabled — WHM requires HTTPS" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "whm" "Require SSL" "PASS" "HIGH" "Enabled — WHM requires HTTPS" "" "" "" "" ""
         else
-        add_result "whm" "Require SSL" "FAIL" "HIGH" \
-            "Disabled — WHM accessible via HTTP" \
-            "WHM login credentials sent in plaintext" \
-            "Credential theft via network sniffing" \
-            "Enable in WHM: Tweak Settings > Require SSL" \
-            "requiressl=1" \
-            "" ""
+            add_result "whm" "Require SSL" "FAIL" "HIGH" "Disabled — WHM accessible via HTTP" \
+                "WHM login credentials sent in plaintext" \
+                "Credential theft via network sniffing" \
+                "Enable in WHM: Tweak Settings > Require SSL" \
+                "requiressl=1" ""
         fi
 
         # Referrer security
         local refsec=$(grep "^referrerblanksafety=" "$tweak_conf" 2>/dev/null | cut -d= -f2)
         if [[ "$refsec" == "1" ]]; then
-        add_result "whm" "Referrer Security" "PASS" "MEDIUM" \
-            "Enabled" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "whm" "Referrer Security" "PASS" "MEDIUM" "Enabled" "" "" "" "" ""
         else
-        add_result "whm" "Referrer Security" "WARN" "MEDIUM" \
-            "Disabled" \
-            "Blank referrer not blocked" \
-            "CSRF attacks possible" \
-            "Enable in WHM: Tweak Settings" \
-            "referrerblanksafety=1" \
-            "" ""
+            add_result "whm" "Referrer Security" "WARN" "MEDIUM" "Disabled" \
+                "Blank referrer not blocked" \
+                "CSRF attacks possible" \
+                "Enable in WHM: Tweak Settings" \
+                "referrerblanksafety=1" ""
         fi
 
         # Max emails per hour
         local max_emails=$(grep "^maxemailsperhour=" "$tweak_conf" 2>/dev/null | cut -d= -f2)
         if [[ -n "$max_emails" ]] && [[ "$max_emails" -gt 0 ]] && [[ "$max_emails" -le 500 ]]; then
-        add_result "whm" "Max Emails/Hour" "PASS" "MEDIUM" \
-            "$max_emails" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "whm" "Max Emails/Hour" "PASS" "MEDIUM" "$max_emails" "" "" "" "" ""
         elif [[ -n "$max_emails" ]]; then
-        add_result "whm" "Max Emails/Hour" "WARN" "MEDIUM" \
-            "$max_emails — may be too high" \
-            "High limit allows spam if account compromised" \
-            "IP blacklisting" \
-            "Set reasonable limit (100-500)" \
-            "maxemailsperhour=200" \
-            "" ""
+            add_result "whm" "Max Emails/Hour" "WARN" "MEDIUM" "$max_emails — may be too high" \
+                "High limit allows spam if account compromised" \
+                "IP blacklisting" \
+                "Set reasonable limit (100-500)" \
+                "maxemailsperhour=200" ""
         fi
     fi
 }
@@ -253,74 +170,44 @@ audit_security_config() {
     # cPHulk Brute Force Protection
     local cphulk=$(grep "^cphulk_enabled=" /var/cpanel/cpanel.config 2>/dev/null | cut -d= -f2)
     if [[ "$cphulk" == "1" ]]; then
-        add_result "security" "cPHulk" "PASS" "HIGH" \
-            "Enabled — brute force protection active" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "security" "cPHulk" "PASS" "HIGH" "Enabled — brute force protection active" "" "" "" "" ""
     else
-        add_result "security" "cPHulk" "FAIL" "HIGH" \
-            "Disabled" \
+        add_result "security" "cPHulk" "FAIL" "HIGH" "Disabled" \
             "cPHulk protects against brute force attacks on cPanel/WHM/SSH" \
             "Accounts vulnerable to password guessing" \
             "Enable in WHM: Security Center > cPHulk Brute Force Protection" \
-            "" \
             "" ""
     fi
 
     # SSH Password Auth
     local ssh_pass=$(grep "^PasswordAuthentication" /etc/ssh/sshd_config 2>/dev/null | awk '{print $2}')
     if [[ "$ssh_pass" == "no" ]]; then
-        add_result "security" "SSH Password Auth" "PASS" "HIGH" \
-            "Disabled — key-only authentication" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "security" "SSH Password Auth" "PASS" "HIGH" "Disabled — key-only authentication" "" "" "" "" ""
     else
-        add_result "security" "SSH Password Auth" "WARN" "HIGH" \
-            "Enabled" \
+        add_result "security" "SSH Password Auth" "WARN" "HIGH" "Enabled" \
             "SSH password authentication allows brute force attacks" \
             "Server compromise via password guessing" \
             "Disable and use SSH keys" \
-            "PasswordAuthentication no" \
-            "" ""
+            "PasswordAuthentication no" ""
     fi
 
     # Shell access
     local shell_access=$(grep "^SHELL=" /var/cpanel/cpanel.config 2>/dev/null | cut -d= -f2)
     if [[ -n "$shell_access" ]]; then
-        add_result "security" "Default Shell" "INFO" "INFO" \
-            "$shell_access" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "security" "Default Shell" "INFO" "INFO" "$shell_access" "" "" "" "" ""
     fi
 
     # Compiler access
     if [[ -x /usr/bin/gcc ]]; then
         local gcc_perms=$(stat -c "%a" /usr/bin/gcc 2>/dev/null)
         if [[ "$gcc_perms" == "700" ]] || [[ "$gcc_perms" == "750" ]]; then
-        add_result "security" "Compiler Access" "PASS" "MEDIUM" \
-            "Restricted ($gcc_perms)" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "security" "Compiler Access" "PASS" "MEDIUM" "Restricted ($gcc_perms)" "" "" "" "" ""
         else
-        add_result "security" "Compiler Access" "WARN" "MEDIUM" \
-            "Available to all users ($gcc_perms)" \
-            "Attackers can compile exploits on the server" \
-            "Privilege escalation" \
-            "Disable in WHM: Security Center > Compiler Access" \
-            "chmod 750 /usr/bin/gcc" \
-            "" ""
+            add_result "security" "Compiler Access" "WARN" "MEDIUM" "Available to all users ($gcc_perms)" \
+                "Attackers can compile exploits on the server" \
+                "Privilege escalation" \
+                "Disable in WHM: Security Center > Compiler Access" \
+                "chmod 750 /usr/bin/gcc" ""
         fi
     fi
 }
@@ -331,13 +218,7 @@ audit_php_config() {
     # Check PHP versions
     local php_versions=$(ls /opt/cpanel/ea-php*/root/usr/bin/php 2>/dev/null | wc -l)
     if [[ "$php_versions" -gt 0 ]]; then
-        add_result "php" "PHP Versions" "INFO" "INFO" \
-            "$php_versions versions installed" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "php" "PHP Versions" "INFO" "INFO" "$php_versions versions installed" "" "" "" "" ""
     fi
 
     # Check for old PHP
@@ -347,74 +228,48 @@ audit_php_config() {
         local major=$(echo "$ver" | cut -d. -f1)
         local minor=$(echo "$ver" | cut -d. -f2)
         if [[ "$major" -lt 7 ]] || [[ "$major" -eq 7 && "$minor" -lt 4 ]]; then
-        add_result "php" "PHP $ver" "FAIL" "HIGH" \
-            "End of Life — no security patches" \
-            "PHP $ver no longer receives security updates" \
-            "Known vulnerabilities exploitable" \
-            "Upgrade to PHP 8.1+ in WHM: EasyApache 4" \
-            "" \
-            "" ""
+            add_result "php" "PHP $ver" "FAIL" "HIGH" "End of Life — no security patches" \
+                "PHP $ver no longer receives security updates" \
+                "Known vulnerabilities exploitable" \
+                "Upgrade to PHP 8.1+ in WHM: EasyApache 4" \
+                "" ""
         fi
     done
 
     # Check disable_functions
     local disable_func=$(php -r "echo ini_get('disable_functions');" 2>/dev/null)
     if [[ -n "$disable_func" ]] && [[ "$disable_func" != "no value" ]]; then
-        add_result "php" "disable_functions" "PASS" "HIGH" \
-            "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "php" "disable_functions" "PASS" "HIGH" "Configured" "" "" "" "" ""
     else
-        add_result "php" "disable_functions" "FAIL" "HIGH" \
-            "Not configured" \
+        add_result "php" "disable_functions" "FAIL" "HIGH" "Not configured" \
             "PHP dangerous functions (exec, system, passthru) are enabled" \
             "Remote code execution if site is compromised" \
             "Add dangerous functions to disable_functions" \
-            "disable_functions = exec,passthru,shell_exec,system,proc_open,popen" \
-            "" ""
+            "disable_functions = exec,passthru,shell_exec,system,proc_open,popen" ""
     fi
 
     # expose_php
     local expose_php=$(php -r "echo ini_get('expose_php');" 2>/dev/null)
     if [[ "$expose_php" == "0" ]] || [[ "$expose_php" == "" ]]; then
-        add_result "php" "expose_php" "PASS" "LOW" \
-            "Off — PHP version hidden" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "php" "expose_php" "PASS" "LOW" "Off — PHP version hidden" "" "" "" "" ""
     else
-        add_result "php" "expose_php" "WARN" "LOW" \
-            "On — PHP version exposed in headers" \
+        add_result "php" "expose_php" "WARN" "LOW" "On — PHP version exposed in headers" \
             "X-Powered-By header reveals PHP version" \
             "Information disclosure for reconnaissance" \
             "Set expose_php = Off in php.ini" \
-            "expose_php = Off" \
-            "" ""
+            "expose_php = Off" ""
     fi
 
     # display_errors
     local display_errors=$(php -r "echo ini_get('display_errors');" 2>/dev/null)
     if [[ "$display_errors" == "0" ]] || [[ "$display_errors" == "" ]]; then
-        add_result "php" "display_errors" "PASS" "MEDIUM" \
-            "Off — errors not shown to users" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "php" "display_errors" "PASS" "MEDIUM" "Off — errors not shown to users" "" "" "" "" ""
     else
-        add_result "php" "display_errors" "FAIL" "MEDIUM" \
-            "On — errors visible to users" \
+        add_result "php" "display_errors" "FAIL" "MEDIUM" "On — errors visible to users" \
             "PHP errors reveal file paths, database info, and code structure" \
             "Information disclosure" \
             "Set display_errors = Off in php.ini" \
-            "display_errors = Off" \
-            "" ""
+            "display_errors = Off" ""
     fi
 }
 
@@ -424,42 +279,26 @@ audit_email_security() {
     # SPF
     local spf=$(grep -r "include:_spf" /etc/ /var/cpanel/ 2>/dev/null | head -1)
     if [[ -n "$spf" ]]; then
-        add_result "email" "SPF" "PASS" "MEDIUM" \
-            "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "email" "SPF" "PASS" "MEDIUM" "Configured" "" "" "" "" ""
     else
-        add_result "email" "SPF" "WARN" "MEDIUM" \
-            "Not detected in config" \
+        add_result "email" "SPF" "WARN" "MEDIUM" "Not detected in config" \
             "SPF prevents email spoofing" \
             "Domain can be used for spam/phishing" \
             "Configure SPF records for your domains" \
-            "v=spf1 +a +mx ~all" \
-            "" ""
+            "v=spf1 +a +mx ~all" ""
     fi
 
     # DKIM
     if [[ -d /var/cpanel/domain_keys ]]; then
         local dkim_count=$(ls /var/cpanel/domain_keys/public/ 2>/dev/null | wc -l)
         if [[ "$dkim_count" -gt 0 ]]; then
-        add_result "email" "DKIM" "PASS" "MEDIUM" \
-            "$dkim_count domains configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "email" "DKIM" "PASS" "MEDIUM" "$dkim_count domains configured" "" "" "" "" ""
         else
-        add_result "email" "DKIM" "WARN" "MEDIUM" \
-            "No DKIM keys found" \
-            "DKIM verifies email authenticity" \
-            "Emails may be marked as spam" \
-            "Enable DKIM in WHM: Email > DKIM Keys" \
-            "" \
-            "" ""
+            add_result "email" "DKIM" "WARN" "MEDIUM" "No DKIM keys found" \
+                "DKIM verifies email authenticity" \
+                "Emails may be marked as spam" \
+                "Enable DKIM in WHM: Email > DKIM Keys" \
+                "" ""
         fi
     fi
 
@@ -467,13 +306,7 @@ audit_email_security() {
     if [[ -f /etc/exim.conf ]]; then
         local smtp_restrict=$(grep "^smtp_enforce_sync" /etc/exim.conf 2>/dev/null)
         if [[ -n "$smtp_restrict" ]]; then
-        add_result "email" "SMTP Restrictions" "PASS" "MEDIUM" \
-            "Configured" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "email" "SMTP Restrictions" "PASS" "MEDIUM" "Configured" "" "" "" "" ""
         fi
     fi
 }
@@ -485,32 +318,22 @@ audit_backup_config() {
     if [[ -f "$backup_conf" ]]; then
         local backup_enabled=$(grep "^BACKUPENABLE=" "$backup_conf" 2>/dev/null | cut -d= -f2)
         if [[ "$backup_enabled" == "yes" ]]; then
-        add_result "backup" "Backup" "PASS" "HIGH" \
-            "Enabled" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "backup" "Backup" "PASS" "HIGH" "Enabled" "" "" "" "" ""
 
             local backup_retention=$(grep "^BACKUP_RETENTION=" "$backup_conf" 2>/dev/null | cut -d= -f2)
             [[ -n "$backup_retention" ]] && add_result "backup" "Retention" "INFO" "INFO" "$backup_retention days" "" "" "" "" ""
         else
-        add_result "backup" "Backup" "FAIL" "HIGH" \
-            "Disabled" \
-            "No automated backups configured" \
-            "Data loss risk in case of failure or compromise" \
-            "Enable in WHM: Backup > Backup Configuration" \
-            "" \
-            "" ""
+            add_result "backup" "Backup" "FAIL" "HIGH" "Disabled" \
+                "No automated backups configured" \
+                "Data loss risk in case of failure or compromise" \
+                "Enable in WHM: Backup > Backup Configuration" \
+                "" ""
         fi
     else
-        add_result "backup" "Backup" "WARN" "HIGH" \
-            "Configuration not found" \
+        add_result "backup" "Backup" "WARN" "HIGH" "Configuration not found" \
             "Backup configuration file missing" \
             "May not have backups configured" \
             "Configure backups in WHM" \
-            "" \
             "" ""
     fi
 }
@@ -522,48 +345,30 @@ audit_firewall() {
     if [[ -f /etc/csf/csf.conf ]]; then
         local csf_enabled=$(grep "^TESTING =" /etc/csf/csf.conf 2>/dev/null | awk '{print $3}')
         if [[ "$csf_enabled" == "0" ]]; then
-        add_result "firewall" "CSF" "PASS" "HIGH" \
-            "Active (TESTING=0)" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+            add_result "firewall" "CSF" "PASS" "HIGH" "Active (TESTING=0)" "" "" "" "" ""
         else
-        add_result "firewall" "CSF" "WARN" "HIGH" \
-            "In TESTING mode" \
-            "CSF is in testing mode and not blocking" \
-            "Firewall not actually protecting server" \
-            "Set TESTING = 0 in /etc/csf/csf.conf" \
-            "TESTING = 0" \
-            "" ""
+            add_result "firewall" "CSF" "WARN" "HIGH" "In TESTING mode" \
+                "CSF is in testing mode and not blocking" \
+                "Firewall not actually protecting server" \
+                "Set TESTING = 0 in /etc/csf/csf.conf" \
+                "TESTING = 0" ""
         fi
     else
-        add_result "firewall" "CSF" "WARN" "HIGH" \
-            "Not installed" \
+        add_result "firewall" "CSF" "WARN" "HIGH" "Not installed" \
             "ConfigServer Firewall not found" \
             "No firewall protection" \
             "Install CSF: https://configserver.com/csf/" \
-            "" \
             "" ""
     fi
 
     # ModSecurity
     if [[ -f /etc/apache2/conf.d/modsec2.conf ]] || [[ -f /etc/nginx/modsec/modsec2.conf ]]; then
-        add_result "firewall" "ModSecurity" "PASS" "HIGH" \
-            "Installed" \
-            "" \
-            "" \
-            "" \
-            "" \
-            "" ""
+        add_result "firewall" "ModSecurity" "PASS" "HIGH" "Installed" "" "" "" "" ""
     else
-        add_result "firewall" "ModSecurity" "WARN" "HIGH" \
-            "Not detected" \
+        add_result "firewall" "ModSecurity" "WARN" "HIGH" "Not detected" \
             "ModSecurity is a web application firewall" \
             "Web apps vulnerable to common attacks (SQLi, XSS)" \
             "Install via EasyApache 4" \
-            "" \
             "" ""
     fi
 }
