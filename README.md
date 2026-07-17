@@ -15,7 +15,7 @@
 
 | Module | Version | Checks | Description |
 |--------|---------|--------|-------------|
-| [**Linux**](linux/) | 2.0.0 | 158 | Core OS security: users, SSH, firewall, kernel, services, permissions, containers, cloud, logging |
+| [**Linux**](linux/) | 2.1.0 | 158 | Core OS security: users, SSH, firewall, kernel, services, permissions, containers, cloud, logging |
 | [**Apache**](apache/) | 1.0.0 | 68 | Apache HTTP Server: headers, modules, SSL/TLS, directories, access control, logging |
 | [**Nginx**](nginx/) | 1.0.0 | 49 | Nginx Web Server: headers, SSL/TLS, server config, access control, logging, performance |
 | [**cPanel**](cpanel/) | 1.0.0 | 42 | cPanel & WHM: security config, PHP, email, backup, firewall |

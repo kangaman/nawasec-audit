@@ -1,6 +1,6 @@
 # NawaSec Audit — Linux Module
 
-**Version:** 2.0.0  
+**Version:** 2.1.0  
 **Module:** `nawasec-audit/linux`  
 **Repository:** https://github.com/kangaman/nawasec-audit  
 **Based on:** [NawaHard](https://github.com/kangaman/NawaHard)
