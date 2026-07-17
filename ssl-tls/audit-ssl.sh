@@ -842,7 +842,8 @@ main() {
     [[ "$OPT_JSON" -eq 1 ]] && echo -e "  ${Y}JSON:${N} $REPORT_JSON"
     [[ "$OPT_TXT" -eq 1 ]] && echo -e "  ${B}TXT:${N}  $REPORT_TXT"
 
-    exit 0
+    # Return non-zero if any FAILs, useful for CI wrappers
+    [[ "$FAIL" -gt 0 ]] && exit 2 || exit 0
 }
 
 main

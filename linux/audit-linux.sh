@@ -183,13 +183,13 @@ add_result() {
     fi
 
     # Store for JSON output
-    local esc_msg=$(echo "$message" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-    local esc_expl=$(echo "$explanation" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-    local esc_risk=$(echo "$risk" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-    local esc_impact=$(echo "$impact" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-    local esc_rec=$(echo "$recommendation" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-    local esc_ex=$(echo "$example" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
-    local esc_ref=$(echo "$reference" | sed 's/"/\\"/g' | sed "s/'/\\\\'/g")
+    local esc_msg=$(echo "$message" | sed 's/"/\\"/g')
+    local esc_expl=$(echo "$explanation" | sed 's/"/\\"/g')
+    local esc_risk=$(echo "$risk" | sed 's/"/\\"/g')
+    local esc_impact=$(echo "$impact" | sed 's/"/\\"/g')
+    local esc_rec=$(echo "$recommendation" | sed 's/"/\\"/g')
+    local esc_ex=$(echo "$example" | sed 's/"/\\"/g')
+    local esc_ref=$(echo "$reference" | sed 's/"/\\"/g')
 
     RESULTS+=("{\"category\":\"${category}\",\"name\":\"${name}\",\"status\":\"${status}\",\"severity\":\"${severity}\",\"message\":\"${esc_msg}\",\"explanation\":\"${esc_expl}\",\"risk\":\"${esc_risk}\",\"impact\":\"${esc_impact}\",\"recommendation\":\"${esc_rec}\",\"example\":\"${esc_ex}\",\"reference\":\"${esc_ref}\"}")
 }
@@ -1213,7 +1213,8 @@ main() {
     [[ "$OPT_JSON" -eq 1 ]] && generate_json
     [[ "$OPT_TXT" -eq 1 ]]  && generate_txt
 
-    exit 0
+    # Return non-zero if any FAILs, useful for CI wrappers
+    [[ "$FAIL" -gt 0 ]] && exit 2 || exit 0
 }
 
 main "$@"

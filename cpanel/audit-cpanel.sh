@@ -689,11 +689,12 @@ main() {
         audit_firewall
     fi
     calculate_score
-    print_summary
     [[ "$OPT_HTML" -eq 1 ]] && generate_html
     [[ "$OPT_JSON" -eq 1 ]] && generate_json
     [[ "$OPT_TXT" -eq 1 ]]  && generate_txt
-    exit 0
+
+    # Return non-zero if any FAILs, useful for CI wrappers
+    [[ "$FAIL" -gt 0 ]] && exit 2 || exit 0
 }
 
 main "$@"
