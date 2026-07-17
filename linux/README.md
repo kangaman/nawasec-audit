@@ -107,3 +107,7 @@ Output: html:/root/reports/linux-audit-20250115.html
 ## License
 
 MIT — see the main repository for details.
+
+## Credits
+
+This module is based on [NawaHard](https://github.com/kangaman/NawaHard) — the original Linux VPS security audit tool.
