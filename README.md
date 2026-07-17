@@ -2,8 +2,8 @@
 
 [![Version](https://img.shields.io/badge/Framework-2.0.0-green.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Modules](https://img.shields.io/badge/Modules-4-purple.svg)]()
-[![Checks](https://img.shields.io/badge/Checks-317-orange.svg)]()
+[![Modules](https://img.shields.io/badge/Modules-8-purple.svg)]()
+[![Checks](https://img.shields.io/badge/Checks-559-orange.svg)]()
 
 **NawaSec Audit** is a modular, rule-based server security audit framework. It provides structured security checks across operating systems, web servers, and hosting panels without relying on AI or external services.
 
@@ -19,8 +19,12 @@
 | [**Apache**](apache/) | 2.1.0 | 68 | Apache HTTP Server: headers, modules, SSL/TLS, directories, access control, logging |
 | [**Nginx**](nginx/) | 2.1.0 | 49 | Nginx Web Server: headers, SSL/TLS, server config, access control, logging, performance |
 | [**cPanel**](cpanel/) | 2.1.0 | 42 | cPanel & WHM: security config, PHP, email, backup, firewall |
+| [**Database**](database/) | 2.1.0 | 69 | MySQL/MariaDB/PostgreSQL: authentication, network, privileges, logging, TLS, dangerous settings |
+| [**SSL/TLS**](ssl-tls/) | 2.1.0 | 74 | SSL/TLS certificates: protocols, ciphers, certificate chain, HSTS, OCSP stapling, key size |
+| [**Docker**](docker/) | 2.1.0 | 78 | Docker security: daemon config, container privileges, network, volumes, image security, socket permissions |
+| [**DNS**](dns/) | 2.1.0 | 38 | DNS security: BIND/named config, recursion, zone transfer, DNSSEC, rate limiting, resolv.conf |
 
-**Total: 317 security checks across 4 modules**
+**Total: 576 security checks across 8 modules**
 
 ---
 
@@ -32,6 +36,10 @@
 | **Apache** | Apache HTTPD 2.4+, Ubuntu/Debian (apache2), RHEL/CentOS (httpd), cPanel EasyApache 4 |
 | **Nginx** | Nginx 1.18+, Nginx Plus R20+, Ubuntu/Debian, RHEL/CentOS, Docker |
 | **cPanel** | cPanel & WHM 110+, CentOS, AlmaLinux, Rocky Linux, CloudLinux |
+| **Database** | MySQL 5.7+/8.0+, MariaDB 10.3+, PostgreSQL 12+ |
+| **SSL/TLS** | Any HTTPS server (local or remote), OpenSSL 1.1+ |
+| **Docker** | Docker 20.10+, Docker CE/EE, Podman (partial) |
+| **DNS** | BIND 9, systemd-resolved, /etc/resolv.conf |
 
 ---
 
@@ -45,7 +53,7 @@ git clone https://github.com/kangaman/nawasec-audit.git
 cd nawasec-audit
 
 # Make scripts executable
-chmod +x linux/audit-linux.sh apache/audit-apache.sh nginx/audit-nginx.sh cpanel/audit-cpanel.sh
+chmod +x linux/audit-linux.sh apache/audit-apache.sh nginx/audit-nginx.sh cpanel/audit-cpanel.sh database/audit-database.sh ssl-tls/audit-ssl.sh docker/audit-docker.sh dns/audit-dns.sh
 
 # Run audit
 sudo ./linux/audit-linux.sh --all
