@@ -3,7 +3,7 @@
 # ║  NawaSec Audit - Linux — Linux VPS Security Audit & Hardening Recommendation         ║
 # ║  Version: 1.0.0                                                        ║
 # ║  License: MIT                                                          ║
-# ║  Repository: https://github.com/kangaman/NawaSec Audit - Linux                      ║
+# ║  Repository: https://github.com/kangaman/nawasec-audit                      ║
 # ╚══════════════════════════════════════════════════════════════════════════╝
 #
 # Pure rule-based VPS security audit — NO AI, NO external API calls.
@@ -1279,7 +1279,7 @@ EOF
     done
 
     echo "</tbody></table>" >> "$REPORT_HTML"
-    echo "<footer>NawaSec Audit - Linux v${VERSION} — Generated $(date) — https://github.com/kangaman/NawaSec Audit - Linux</footer>" >> "$REPORT_HTML"
+    echo "<footer>NawaSec Audit - Linux v${VERSION} — Generated $(date) — https://github.com/kangaman/nawasec-audit</footer>" >> "$REPORT_HTML"
     echo "</body></html>" >> "$REPORT_HTML"
 }
 
@@ -1330,7 +1330,7 @@ EOF
   Passed: ${PASS}  |  Warnings: ${WARN}  |  Failed: ${FAIL}
   Info:   ${INFO}  |  Skipped: ${SKIP}   |  Total: ${TOTAL}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  NawaSec Audit - Linux v${VERSION} — https://github.com/kangaman/NawaSec Audit - Linux
+  NawaSec Audit - Linux v${VERSION} — https://github.com/kangaman/nawasec-audit
 EOF
 }
 
